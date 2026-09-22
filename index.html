@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Dashboard - YKC X SCO</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .glass {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        /* Custom scrollbar for modal */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <header class="sticky top-0 z-30 glass bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25">
+                    <i class="fa-solid fa-boxes-stacked text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">Inventory Dashboard</h1>
+                    <p class="text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider uppercase">YKC X SCO</p>
+                </div>
+            </div>
+
+            <!-- Dark / Light Mode Toggle -->
+            <div class="flex items-center space-x-3">
+                <button id="themeToggle" title="Ganti Tema" class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all shadow-sm">
+                    <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+        <!-- Hero Header -->
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+                Inventory Dasboard
+            </h2>
+            <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base">
+                Akses cepat & terorganisir untuk seluruh Google Sheets operasional Inventory dan Impor untuk lokasi Jogja dan Solo Raya.
+            </p>
+        </div>
+
+        <!-- Search Bar and Category Filter Controls -->
+        <div class="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm">
+            <!-- Search Input -->
+            <div class="relative w-full md:w-80">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" placeholder="Cari spreadsheet..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm transition-all text-slate-800 dark:text-slate-100">
+            </div>
+
+            <!-- Category Pills Filter -->
+            <div class="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end" id="filterContainer">
+                <button data-category="all" class="filter-btn active-filter px-4 py-2 text-xs font-semibold rounded-xl border transition-all bg-blue-600 text-white border-blue-600 shadow-sm">
+                    Semua
+                </button>
+                <button data-category="inventory" class="filter-btn px-4 py-2 text-xs font-semibold rounded-xl border transition-all bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-500">
+                    <i class="fa-solid fa-boxes-stacked mr-1.5 text-blue-500"></i> Inventory
+                </button>
+                <button data-category="impor" class="filter-btn px-4 py-2 text-xs font-semibold rounded-xl border transition-all bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-500">
+                    <i class="fa-solid fa-plane-arrival mr-1.5 text-emerald-500"></i> Impor
+                </button>
+                <button data-category="solo" class="filter-btn px-4 py-2 text-xs font-semibold rounded-lg border transition-all bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-500">
+                    <i class="fa-solid fa-location-dot mr-1.5 text-amber-500"></i> Solo Raya
+                </button>
+            </div>
+        </div>
+
+        <div id="linksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic cards rendered by JS -->
+        </div>
+
+        <!-- Empty State Message -->
+        <div id="noResults" class="hidden text-center py-16">
+            <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-700 dark:text-slate-300">Spreadsheet Tidak Ditemukan</h3>
+            <p class="text-xs text-slate-500 mt-1">Coba kata kunci lain atau pilih kategori yang berbeda.</p>
+        </div>
+    </main>
+
+    <div id="previewModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                <div class="flex items-center space-x-3 overflow-hidden">
+                    <div id="modalIcon" class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                        <i class="fa-solid fa-table"></i>
+                    </div>
+                    <div class="truncate">
+                        <h3 id="modalTitle" class="font-bold text-slate-900 dark:text-white text-base truncate">Preview Spreadsheet</h3>
+                        <p id="modalCategory" class="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Google Sheets</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 flex-shrink-0">
+                    <a id="modalExternalLink" href="#" target="_blank" rel="noopener noreferrer" 
+                        class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors flex items-center space-x-1">
+                        <span>Buka Tab Baru</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                    <button id="closeModalBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- Modal Body (Iframe Container) -->
+            <div class="flex-grow bg-slate-100 dark:bg-slate-950 relative">
+                <div id="modalLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-slate-900 z-10">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-3"></i>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Memuat preview Google Sheets...</p>
+                </div>
+                <iframe id="previewIframe" class="w-full h-full border-0" src="" allow="autoplay"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 py-6 bg-white dark:bg-slate-900 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 dark:text-slate-400 font-medium">
+            INVENTORY &bull; YKC X SCO &copy; 2026 Internal Operations Landing Page
+        </div>
+    </footer>
+
+    <script>
+        /* Data Link Spreadsheet Kantor */
+        const sheetsData = [
+            {
+                id: "inv-1",
+                title: "INVENTORY PRODUK & LAYOUT",
+                category: "inventory",
+                categoryLabel: "Inventory",
+                badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800/50",
+                iconClass: "fa-solid fa-sitemap text-blue-500",
+                desc: "Tata letak gudang, denah rak, dan pemetaan posisi produk.",
+                url: "https://docs.google.com/spreadsheets/d/16FeA0S07DTz5o-t6HORN10ry59L-ox015Xk95gDHbSQ/edit?hl=id&gid=159820582#gid=159820582"
+            },
+            {
+                id: "inv-2",
+                title: "INVENTORY STOCK",
+                category: "inventory",
+                categoryLabel: "Inventory",
+                badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800/50",
+                iconClass: "fa-solid fa-boxes-stacked text-blue-500",
+                desc: "Pencatatan real-time jumlah stok barang di gudang utama.",
+                url: "https://docs.google.com/spreadsheets/d/1_VAQTCTueALc9CME_klP2IkHiKkgbsyF5zVHqFpTGHQ/edit?hl=id&gid=0#gid=0"
+            },
+            {
+                id: "inv-3",
+                title: "INVENTORY OPNAME",
+                category: "inventory",
+                categoryLabel: "Inventory",
+                badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800/50",
+                iconClass: "fa-solid fa-clipboard-check text-blue-500",
+                desc: "Laporan audit fisik & pembaruan selisih stok berkala.",
+                url: "https://docs.google.com/spreadsheets/d/1AN3eMVZJ6gvvZGpInwFahvO5gMhUd9ZV1cfMlpomHdI/edit?gid=0#gid=0"
+            },
+            {
+                id: "imp-1",
+                title: "IMPOR TRACKING",
+                category: "impor",
+                categoryLabel: "Impor",
+                badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50",
+                iconClass: "fa-solid fa-truck-fast text-emerald-500",
+                desc: "Status pengiriman, estimasi kedatangan, & tracking kontainer.",
+                url: "https://docs.google.com/spreadsheets/d/1igSv8Z4_PIRhoeEeOgB_QNldp5zww9zDS_JAyWI1aQQ/edit?hl=id&pli=1&gid=1344930343#gid=1344930343"
+            },
+            {
+                id: "imp-2",
+                title: "KATEGORI IMPOR LIST PRODUK",
+                category: "impor",
+                categoryLabel: "Impor",
+                badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50",
+                iconClass: "fa-solid fa-list-check text-emerald-500",
+                desc: "Daftar katalog & rincian spesifikasi barang impor.",
+                url: "https://docs.google.com/spreadsheets/d/1RvFAu72o6C95-WgNlhCr9YtHFwUumPN-2BhpT-Zqll4/edit?pli=1&gid=1835875947#gid=1835875947"
+            },
+            {
+                id: "solo-1",
+                title: "SOLO LIST REQUEST",
+                category: "solo",
+                categoryLabel: "Solo Raya",
+                badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800/50",
+                iconClass: "fa-solid fa-file-invoice text-amber-500",
+                desc: "Permintaan barang & pengajuan distribusi area Solo Raya.",
+                url: "https://docs.google.com/spreadsheets/d/1AmmJX1v85pLW5gUhm2aNnhLm7frnmadCuNYmRVn4KLg/edit?pli=1&gid=106176622#gid=106176622"
+            },
+            {
+                id: "solo-2",
+                title: "SOLO LIST PICKING",
+                category: "solo",
+                categoryLabel: "Solo Raya",
+                badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800/50",
+                iconClass: "fa-solid fa-hand-holding-hand text-amber-500",
+                desc: "Daftar pengambilan & verifikasi barang pengiriman Solo Raya.",
+                url: "https://docs.google.com/spreadsheets/d/1rrO5bAY8ieOzRrmYGEyfnjjzBo5ekTQgKLnM6-gd32E/edit?gid=0#gid=0"
+            }
+        ];
+
+        /* State Variables */
+        let activeCategory = 'all';
+        let searchQuery = '';
+
+        /* DOM Elements */
+        const linksGrid = document.getElementById('linksGrid');
+        const noResults = document.getElementById('noResults');
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        const previewModal = document.getElementById('previewModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const previewIframe = document.getElementById('previewIframe');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalCategory = document.getElementById('modalCategory');
+        const modalExternalLink = document.getElementById('modalExternalLink');
+        const modalLoader = document.getElementById('modalLoader');
+
+        function renderCards() {
+            const filtered = sheetsData.filter(item => {
+                const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+                const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.desc.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                linksGrid.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            noResults.classList.add('hidden');
+            linksGrid.innerHTML = filtered.map(item => `
+                <div class="bg-white dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-5 shadow-sm hover:shadow-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200 flex flex-col justify-between group">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 text-[11px] font-semibold rounded-lg border ${item.badgeColor}">
+                                ${item.categoryLabel}
+                            </span>
+                            <i class="fa-solid fa-file-spreadsheet text-slate-300 dark:text-slate-600 text-lg"></i>
+                        </div>
+                        <div class="flex items-start space-x-3.5 mb-3">
+                            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 flex-shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="${item.iconClass} text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    ${item.title}
+                                </h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                    ${item.desc}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
+                        <!-- Open Tab Link Button -->
+                        <a href="${item.url}" target="_blank" rel="noopener noreferrer" 
+                           class="flex-1 inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors shadow-sm">
+                            <span>Buka Link</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+
+                        <!-- Quick Preview Modal Button -->
+                        <button onclick="openPreviewModal('${item.id}')" 
+                                title="Quick Preview Modal"
+                                class="inline-flex items-center justify-center px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors border border-slate-200 dark:border-slate-600">
+                            <i class="fa-solid fa-eye mr-1"></i> Preview
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.openPreviewModal = function(id) {
+            const item = sheetsData.find(s => s.id === id);
+            if (!item) return;
+
+            modalTitle.textContent = item.title;
+            modalCategory.textContent = item.categoryLabel + " • Google Sheets";
+            modalExternalLink.href = item.url;
+            
+            // Format preview URL to iframe embed view
+            let previewUrl = item.url;
+            if (previewUrl.includes('/edit')) {
+                previewUrl = previewUrl.replace(/\/edit.*$/, '/preview');
+            }
+
+            modalLoader.classList.remove('hidden');
+            previewIframe.src = previewUrl;
+
+            previewIframe.onload = function() {
+                modalLoader.classList.add('hidden');
+            };
+
+            previewModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        function closeModal() {
+            previewModal.classList.add('hidden');
+            previewIframe.src = '';
+            document.body.style.overflow = '';
+        }
+
+        closeModalBtn.addEventListener('click', closeModal);
+        previewModal.addEventListener('click', (e) => {
+            if (e.target === previewModal) closeModal();
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderCards();
+        });
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => {
+                    b.classList.remove('bg-blue-600', 'text-white', 'border-blue-600', 'shadow-sm');
+                    b.classList.add('bg-slate-100', 'dark:bg-slate-700/50', 'text-slate-600', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+                });
+
+                btn.classList.remove('bg-slate-100', 'dark:bg-slate-700/50', 'text-slate-600', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+                btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600', 'shadow-sm');
+
+                activeCategory = btn.dataset.category;
+                renderCards();
+            });
+        });
+
+        themeToggleBtn.addEventListener('click', () => {
+            const html = document.documentElement;
+            if (html.classList.contains('light')) {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        });
+
+        // Close modal on Escape key press
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !previewModal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        // Initialize on load
+        window.onload = function() {
+            renderCards();
+        };
+    </script>
+</body>
+</html>
