@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVENTORY - YKC X SCO (Local)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans min-h-screen transition-colors duration-300">
+
+    <!-- Navbar -->
+    <nav class="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-4 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0">
+                <i class="fa-solid fa-boxes-stacked text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-lg text-slate-900 dark:text-white leading-tight tracking-tight">Inventory Dashboard</h1>
+                <p class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">YKC X SCO</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="openModal('addLinkModal')" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-semibold hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors shadow-sm">
+                <i class="fa-solid fa-plus text-blue-600"></i> Kelola Data
+            </button>
+            <button id="themeToggle" onclick="window.toggleDarkMode()" class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-slate-500 shadow-sm">
+                <i id="themeIcon" class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="text-center mt-12 mb-10 px-4">
+        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white mb-3 tracking-tight">Inventory Dasboard</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm max-w-2xl mx-auto leading-relaxed">
+            Akses cepat & terorganisir untuk seluruh Google Sheets operasional Inventory dan Impor<br class="hidden sm:block"> untuk lokasi Jogja dan Solo Raya.
+        </p>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="max-w-[1100px] mx-auto px-4 sm:px-6 pb-16">
+        
+        <!-- Control Bar -->
+        <div class="bg-white dark:bg-slate-900 rounded-[1.25rem] border border-gray-200 dark:border-slate-800 p-2.5 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <!-- Search Bar -->
+            <div class="relative w-full md:w-80 shrink-0">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="searchInput" placeholder="Cari spreadsheet..." 
+                    class="w-full bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:border-gray-200 dark:focus:border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none transition-all dark:text-white">
+            </div>
+
+            <!-- Dynamic Filter Buttons Container -->
+            <div id="filterContainer" class="flex flex-nowrap overflow-x-auto gap-2 w-full md:w-auto hide-scrollbar">
+                <!-- Filters injected via JS -->
+            </div>
+        </div>
+
+        <!-- Links Container -->
+        <div id="linksContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Data injected via JS -->
+        </div>
+
+        <!-- Empty Search Result -->
+        <div id="noResults" class="hidden text-center py-16">
+            <i class="fa-solid fa-magnifying-glass text-4xl text-slate-300 dark:text-slate-700 mb-3"></i>
+            <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">Worksheet tidak ditemukan</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Coba kata kunci pencarian yang lain.</p>
+        </div>
+
+    </main>
+
+    <!-- Add Link Modal -->
+    <div id="addLinkModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal('addLinkModal')"></div>
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="relative bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full border border-slate-200 dark:border-slate-700">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
+                    <h3 class="text-lg leading-6 font-bold text-slate-900 dark:text-white">
+                        <i class="fa-solid fa-plus-circle text-blue-600 mr-2"></i> Tambah Worksheet
+                    </h3>
+                    <button onclick="closeModal('addLinkModal')" class="text-slate-400 hover:text-slate-500 focus:outline-none">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div class="px-6 py-5">
+                    <form id="addLinkForm" class="space-y-4" onsubmit="event.preventDefault(); saveLink();">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nama / Judul <span class="text-red-500">*</span></label>
+                            <input type="text" id="inputTitle" required placeholder="Contoh: Jadwal Shift" class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">URL Google Sheets <span class="text-red-500">*</span></label>
+                            <input type="url" id="inputUrl" required placeholder="https://docs.google.com/spreadsheets/..." class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Deskripsi Singkat</label>
+                            <input type="text" id="inputDesc" placeholder="Penjelasan singkat..." class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Kategori <span class="text-red-500">*</span></label>
+                                <button type="button" onclick="openModal('addCategoryModal')" class="text-[10px] font-bold text-blue-600 hover:underline"><i class="fa-solid fa-plus"></i> Kategori Baru</button>
+                            </div>
+                            <select id="selectCategory" required class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white mb-2"></select>
+                        </div>
+                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                            <button type="button" onclick="closeModal('addLinkModal')" class="px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">Batal</button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors">Simpan Data</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal('addCategoryModal')"></div>
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="relative bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full border border-slate-200 dark:border-slate-700">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
+                    <h3 class="text-lg leading-6 font-bold text-slate-900 dark:text-white">
+                        <i class="fa-solid fa-folder-plus text-blue-600 mr-2"></i> Kategori Baru
+                    </h3>
+                    <button onclick="closeModal('addCategoryModal')" class="text-slate-400 hover:text-slate-500 focus:outline-none">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div class="px-6 py-5">
+                    <form id="addCategoryForm" class="space-y-4" onsubmit="event.preventDefault(); saveCategory();">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nama Kategori <span class="text-red-500">*</span></label>
+                            <input type="text" id="inputCatName" required placeholder="Contoh: HRD & GA" class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Ikon (FontAwesome)</label>
+                            <input type="text" id="inputCatIcon" placeholder="Contoh: fa-users" value="fa-folder" class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
+                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                            <button type="button" onclick="closeModal('addCategoryModal')" class="px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">Batal</button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors">Simpan Kategori</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 sm:p-6">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closePreview()"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-2xl flex flex-col w-full max-w-7xl h-[90vh] border border-slate-200 dark:border-slate-700">
+            
+            <!-- Header -->
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded bg-[#E8F0FE] dark:bg-blue-900/30 text-[#1967D2] flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-table-cells"></i>
+                    </div>
+                    <div>
+                        <h3 id="previewTitle" class="text-sm font-bold text-slate-900 dark:text-white uppercase leading-tight"></h3>
+                        <p id="previewSubtitle" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5"></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a id="previewNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden sm:flex px-4 py-2 bg-[#2563EB] hover:bg-blue-700 text-white rounded-lg text-xs font-semibold items-center gap-2 transition-colors">
+                        Buka Tab Baru <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                    <button onclick="closePreview()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Iframe Body -->
+            <div class="flex-grow bg-slate-100 dark:bg-slate-950 relative">
+                <!-- Loading Indicator (Tertutup saat iframe selesai dimuat) -->
+                <div class="absolute inset-0 flex items-center justify-center text-slate-400 z-0">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl"></i>
+                </div>
+                <iframe id="previewIframe" class="absolute inset-0 w-full h-full border-0 z-10" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core LocalStorage Scripts -->
+    <script>
+        // Theme Config
+        window.toggleDarkMode = function() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-moon';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-sun';
+                localStorage.setItem('theme', 'dark');
+            }
+        };
+
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('themeIcon').className = 'fa-solid fa-sun';
+        }
+
+        // Data Management
+        const STORAGE_KEY = 'office_dashboard_data';
+        let appData = { categories: [], links: [] };
+        let activeFilter = 'all';
+        let searchQuery = '';
+
+        // Default Data accurately matching the provided UI
+        const defaultData = {
+            categories: [
+                { id: 'cat-inventory', name: 'Inventory', icon: 'fa-boxes-stacked' },
+                { id: 'cat-impor', name: 'Impor', icon: 'fa-plane-arrival' },
+                { id: 'cat-solo', name: 'Solo Raya', icon: 'fa-location-dot' }
+            ],
+            links: [
+                { id: 'l1', categoryId: 'cat-inventory', title: 'INVENTORY PRODUK & LAYOUT', desc: 'Tata letak gudang, denah rak, dan pemetaan posisi produk.', icon: 'fa-sitemap', url: 'https://docs.google.com/spreadsheets/d/16FeA0S07DTz5o-t6HORN10ry59L-ox015Xk95gDHbSQ/edit?hl=id&gid=159820582#gid=159820582' },
+                { id: 'l2', categoryId: 'cat-inventory', title: 'INVENTORY STOCK', desc: 'Pencatatan real-time jumlah stok barang di gudang utama.', icon: 'fa-boxes-stacked', url: 'https://docs.google.com/spreadsheets/d/1_VAQTCTueALc9CME_klP2IkHiKkgbsyF5zVHqFpTGHQ/edit?hl=id&gid=0#gid=0' },
+                { id: 'l3', categoryId: 'cat-inventory', title: 'INVENTORY OPNAME', desc: 'Laporan audit fisik & pembaruan selisih stok berkala.', icon: 'fa-clipboard-check', url: 'https://docs.google.com/spreadsheets/d/1AN3eMVZJ6gvvZGpInwFahvO5gMhUd9ZV1cfMlpomHdI/edit?gid=0#gid=0' },
+                { id: 'l4', categoryId: 'cat-impor', title: 'IMPOR TRACKING', desc: 'Status pengiriman, estimasi kedatangan, & tracking kontainer.', icon: 'fa-truck-fast', url: 'https://docs.google.com/spreadsheets/d/1igSv8Z4_PIRhoeEeOgB_QNldp5zww9zDS_JAyWI1aQQ/edit?hl=id&pli=1&gid=1344930343#gid=1344930343' },
+                { id: 'l5', categoryId: 'cat-impor', title: 'KATEGORI IMPOR LIST PRODUK', desc: 'Daftar katalog & rincian spesifikasi barang impor.', icon: 'fa-list-ul', url: 'https://docs.google.com/spreadsheets/d/1RvFAu72o6C95-WgNlhCr9YtHFwUumPN-2BhpT-Zqll4/edit?pli=1&gid=1835875947#gid=1835875947' },
+                { id: 'l6', categoryId: 'cat-solo', title: 'SOLO LIST REQUEST', desc: 'Permintaan barang & pengajuan distribusi area Solo Raya.', icon: 'fa-file-invoice', url: 'https://docs.google.com/spreadsheets/d/1AmmJX1v85pLW5gUhm2aNnhLm7frnmadCuNYmRVn4KLg/edit?pli=1&gid=106176622#gid=106176622' },
+                { id: 'l7', categoryId: 'cat-solo', title: 'SOLO LIST PICKING', desc: 'Daftar pengambilan & verifikasi barang pengiriman Solo Raya.', icon: 'fa-hand-holding-hand', url: 'https://docs.google.com/spreadsheets/d/1rrO5bAY8ieOzRrmYGEyfnjjzBo5ekTQgKLnM6-gd32E/edit?gid=0#gid=0' }
+            ]
+        };
+
+        // UI Mapping for Category Colors
+        const categoryColors = {
+            'cat-inventory': { badgeBg: 'bg-[#EBF5FF] dark:bg-blue-900/30', badgeText: 'text-[#2563EB] dark:text-blue-400', iconBg: 'bg-[#F0F5FF] dark:bg-blue-900/20', iconText: 'text-[#2563EB] dark:text-blue-400' },
+            'cat-impor': { badgeBg: 'bg-[#DCFCE7] dark:bg-emerald-900/30', badgeText: 'text-[#059669] dark:text-emerald-400', iconBg: 'bg-[#ECFDF5] dark:bg-emerald-900/20', iconText: 'text-[#059669] dark:text-emerald-400' },
+            'cat-solo': { badgeBg: 'bg-[#FEF3C7] dark:bg-amber-900/30', badgeText: 'text-[#D97706] dark:text-amber-500', iconBg: 'bg-[#FFFBEB] dark:bg-amber-900/20', iconText: 'text-[#D97706] dark:text-amber-500' },
+            'default': { badgeBg: 'bg-gray-100 dark:bg-gray-800', badgeText: 'text-gray-600 dark:text-gray-400', iconBg: 'bg-gray-50 dark:bg-gray-800/50', iconText: 'text-gray-600 dark:text-gray-400' }
+        };
+
+        function initData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                appData = JSON.parse(stored);
+            } else {
+                appData = defaultData;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            }
+            renderUI();
+        }
+
+        // Render UI
+        function renderUI() {
+            renderFilters();
+            renderLinks();
+            populateCategorySelect();
+        }
+
+        function renderFilters() {
+            const container = document.getElementById('filterContainer');
+            let html = `
+                <button onclick="setFilter('all')" class="whitespace-nowrap px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeFilter === 'all' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-gray-50 dark:bg-slate-800/80 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 border border-transparent'}">Semua</button>
+            `;
+            
+            appData.categories.forEach(cat => {
+                const isActive = activeFilter === cat.id;
+                html += `
+                    <button onclick="setFilter('${cat.id}')" class="whitespace-nowrap px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${isActive ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-gray-50 dark:bg-slate-800/80 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 border border-transparent'}">
+                        <i class="fa-solid ${cat.icon}"></i> ${cat.name}
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderLinks() {
+            const container = document.getElementById('linksContainer');
+            const noResults = document.getElementById('noResults');
+            
+            const filteredLinks = appData.links.filter(link => {
+                const matchCat = activeFilter === 'all' || link.categoryId === activeFilter;
+                const matchSearch = link.title.toLowerCase().includes(searchQuery) || link.desc.toLowerCase().includes(searchQuery);
+                return matchCat && matchSearch;
+            });
+
+            if (filteredLinks.length === 0) {
+                container.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+            noResults.classList.add('hidden');
+
+            let html = '';
+            filteredLinks.forEach(link => {
+                const cat = appData.categories.find(c => c.id === link.categoryId) || { name: 'Lainnya' };
+                const colors = categoryColors[link.categoryId] || categoryColors['default'];
+                const icon = link.icon || cat.icon || 'fa-link';
+
+                html += `
+                <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-[1.25rem] p-6 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-slate-600 transition-all flex flex-col relative group">
+                    
+                    <!-- Delete Button (Hover) -->
+                    <button onclick="deleteLink('${link.id}')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-100">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+
+                    <!-- Category Badge -->
+                    <div class="${colors.badgeBg} ${colors.badgeText} text-[10px] font-bold px-2.5 py-1 rounded-md self-start mb-5">
+                        ${cat.name}
+                    </div>
+                    
+                    <!-- Main Content -->
+                    <div class="flex gap-4 mb-6 flex-grow">
+                        <div class="w-[3.25rem] h-[3.25rem] rounded-xl ${colors.iconBg} ${colors.iconText} flex items-center justify-center text-[22px] shrink-0">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-[13px] font-bold text-slate-900 dark:text-white mb-1 uppercase tracking-tight leading-snug">${link.title}</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">${link.desc}</p>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex gap-2 mt-auto">
+                        <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex-1 bg-[#2563EB] hover:bg-blue-700 text-white rounded-lg py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-colors">
+                            Buka Link <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-80"></i>
+                        </a>
+                        <button onclick="openPreview('${link.id}')" class="bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg px-5 py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-colors border border-transparent dark:border-slate-700">
+                            <i class="fa-solid fa-eye text-xs opacity-70"></i> Preview
+                        </button>
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Actions
+        window.setFilter = function(catId) {
+            activeFilter = catId;
+            renderUI();
+        };
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            renderUI();
+        });
+
+        // Modals
+        window.openModal = function(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        };
+        
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            if (modalId === 'addLinkModal') document.getElementById('addLinkForm').reset();
+            if (modalId === 'addCategoryModal') document.getElementById('addCategoryForm').reset();
+        };
+
+        window.openPreview = function(linkId) {
+            const link = appData.links.find(l => l.id === linkId);
+            if (!link) return;
+            const cat = appData.categories.find(c => c.id === link.categoryId) || { name: 'Lainnya' };
+            
+            // Set teks header modal
+            document.getElementById('previewTitle').textContent = link.title;
+            document.getElementById('previewSubtitle').textContent = cat.name + ' • GOOGLE SHEETS';
+            
+            // Set link tombol Tab Baru (tetap link asli agar jika butuh edit, bisa dibuka di tab baru)
+            document.getElementById('previewNewTabBtn').href = link.url;
+            
+            // Tampilkan modal
+            document.getElementById('previewModal').classList.remove('hidden');
+            
+            // Modifikasi URL agar aman (Read-Only Preview)
+            let readOnlyUrl = link.url;
+            if (readOnlyUrl.includes('/edit')) {
+                readOnlyUrl = readOnlyUrl.replace('/edit', '/preview');
+            }
+            
+            // Load URL mode preview ke Iframe
+            document.getElementById('previewIframe').src = readOnlyUrl;
+        };
+
+        window.closePreview = function() {
+            document.getElementById('previewModal').classList.add('hidden');
+            // Kosongkan src iframe untuk menghentikan proses memuat dan membersihkan memori browser
+            document.getElementById('previewIframe').src = '';
+        };
+
+        function populateCategorySelect() {
+            const select = document.getElementById('selectCategory');
+            select.innerHTML = '<option value="" disabled selected>-- Pilih Kategori --</option>';
+            appData.categories.forEach(cat => {
+                select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+            });
+        }
+
+        window.saveCategory = function() {
+            const name = document.getElementById('inputCatName').value.trim();
+            const icon = document.getElementById('inputCatIcon').value.trim() || 'fa-folder';
+            if(!name) return;
+            const newCat = { id: 'cat-' + Date.now(), name: name, icon: icon };
+            appData.categories.push(newCat);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            closeModal('addCategoryModal');
+            renderUI();
+        };
+
+        window.saveLink = function() {
+            const title = document.getElementById('inputTitle').value.trim();
+            const url = document.getElementById('inputUrl').value.trim();
+            const desc = document.getElementById('inputDesc').value.trim();
+            const catId = document.getElementById('selectCategory').value;
+            if(!title || !url || !catId) return;
+            const newLink = { id: 'link-' + Date.now(), categoryId: catId, title: title, url: url, desc: desc, icon: 'fa-link' };
+            appData.links.push(newLink);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            closeModal('addLinkModal');
+            renderUI();
+        };
+
+        window.deleteLink = function(linkId) {
+            if(confirm('Hapus tautan ini?')) {
+                appData.links = appData.links.filter(l => l.id !== linkId);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+                renderUI();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initData);
+    </script>
+</body>
+</html>
